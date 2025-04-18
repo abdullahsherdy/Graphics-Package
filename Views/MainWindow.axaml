@@ -1,0 +1,158 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:vm="using:GraphicsAlgorithmsApp.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="1000" d:DesignHeight="700"
+        x:Class="GraphicsAlgorithmsApp.Views.MainWindow"
+        Title="Drawing Algorithms App">
+
+    <Window.Styles>
+        <Style Selector="Button">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Padding" Value="10 5" />
+        </Style>
+        <Style Selector="ComboBox">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Width" Value="180" />
+        </Style>
+        <Style Selector="TextBlock">
+            <Setter Property="VerticalAlignment" Value="Center" />
+            <Setter Property="Margin" Value="5" />
+        </Style>
+        <Style Selector="NumericUpDown">
+            <Setter Property="Margin" Value="5" />
+            <Setter Property="Width" Value="100" />
+        </Style>
+    </Window.Styles>
+
+    <Grid RowDefinitions="Auto,*">
+        <!-- Top Panel with Controls -->
+        <Grid Grid.Row="0" ColumnDefinitions="Auto,Auto,*,Auto">
+            <!-- Drawing Algorithms Controls -->
+            <StackPanel Grid.Column="0" Orientation="Vertical" Margin="10">
+                <TextBlock FontWeight="Bold" FontSize="16">Drawing Algorithms</TextBlock>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock>Algorithm:</TextBlock>
+                    <ComboBox SelectedIndex="{Binding SelectedAlgorithmIndex}">
+                        <ComboBoxItem>DDA Line</ComboBoxItem>
+                        <ComboBoxItem>Bresenham Line</ComboBoxItem>
+                        <ComboBoxItem>Circle</ComboBoxItem>
+                        <ComboBoxItem>Ellipse</ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock>Color:</TextBlock>
+                    <ComboBox SelectedIndex="{Binding SelectedColorIndex}">
+                        <ComboBoxItem>Black</ComboBoxItem>
+                        <ComboBoxItem>Red</ComboBoxItem>
+                        <ComboBoxItem>Blue</ComboBoxItem>
+                        <ComboBoxItem>Green</ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+                <CheckBox IsChecked="{Binding ShowPreview}">Show Preview</CheckBox>
+                <Button Command="{Binding ClearCommand}">Clear Canvas</Button>
+            </StackPanel>
+
+            <!-- 2D Transformations Controls -->
+            <StackPanel Grid.Column="1" Orientation="Vertical" Margin="10">
+                <TextBlock FontWeight="Bold" FontSize="16">2D Transformations</TextBlock>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock>Transformation:</TextBlock>
+                    <ComboBox SelectedIndex="{Binding SelectedTransformationIndex}">
+                        <ComboBoxItem>Translation</ComboBoxItem>
+                        <ComboBoxItem>Scaling</ComboBoxItem>
+                        <ComboBoxItem>Rotation</ComboBoxItem>
+                        <ComboBoxItem>Reflection X-Axis</ComboBoxItem>
+                        <ComboBoxItem>Reflection Y-Axis</ComboBoxItem>
+                        <ComboBoxItem>Reflection Origin</ComboBoxItem>
+                        <ComboBoxItem>Shear X</ComboBoxItem>
+                        <ComboBoxItem>Shear Y</ComboBoxItem>
+                    </ComboBox>
+                </StackPanel>
+                
+                <!-- Translation Parameters -->
+                <StackPanel IsVisible="{Binding IsTranslationSelected}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>X:</TextBlock>
+                        <NumericUpDown Value="{Binding TranslateX}" Increment="10" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Y:</TextBlock>
+                        <NumericUpDown Value="{Binding TranslateY}" Increment="10" />
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Scaling Parameters -->
+                <StackPanel IsVisible="{Binding IsScalingSelected}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Scale X:</TextBlock>
+                        <NumericUpDown Value="{Binding ScaleX}" Increment="0.1" FormatString="F1" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Scale Y:</TextBlock>
+                        <NumericUpDown Value="{Binding ScaleY}" Increment="0.1" FormatString="F1" />
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Rotation Parameters -->
+                <StackPanel IsVisible="{Binding IsRotationSelected}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Angle (degrees):</TextBlock>
+                        <NumericUpDown Value="{Binding RotationAngle}" Increment="15" />
+                    </StackPanel>
+                </StackPanel>
+                
+                <!-- Shearing Parameters -->
+                <StackPanel IsVisible="{Binding IsShearingSelected}">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock>Shear Factor:</TextBlock>
+                        <NumericUpDown Value="{Binding ShearFactor}" Increment="0.1" FormatString="F1" />
+                    </StackPanel>
+                </StackPanel>
+                
+                <Button Command="{Binding ApplyTransformationCommand}">Apply Transformation</Button>
+            </StackPanel>
+            
+            <!-- Unit Circle Coordinates -->
+            <StackPanel Grid.Column="3" Orientation="Vertical" Margin="10">
+                <TextBlock FontWeight="Bold" FontSize="16">Unit Circle Coordinates</TextBlock>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock>Unit X:</TextBlock>
+                    <TextBlock Text="{Binding UnitX}" Width="80" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock>Unit Y:</TextBlock>
+                    <TextBlock Text="{Binding UnitY}" Width="80" />
+                </StackPanel>
+                <TextBlock FontSize="12" TextWrapping="Wrap" MaxWidth="200">
+                    Mouse position in unit circle coordinates (center of canvas is origin).
+                </TextBlock>
+            </StackPanel>
+        </Grid>
+
+        <!-- Drawing Canvases -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,*">
+            <!-- Main Drawing Canvas -->
+            <Border Grid.Column="0" BorderBrush="Black" BorderThickness="1" Margin="10">
+                <Canvas Name="DrawingCanvas" Background="White"
+                        PointerPressed="Canvas_PointerPressed"
+                        PointerMoved="Canvas_PointerMoved"
+                        PointerReleased="Canvas_PointerReleased">
+                    <!-- Crosshair for origin -->
+                    <Line StartPoint="0,250" EndPoint="500,250" Stroke="LightGray" StrokeThickness="1" />
+                    <Line StartPoint="250,0" EndPoint="250,500" Stroke="LightGray" StrokeThickness="1" />
+                </Canvas>
+            </Border>
+            
+            <!-- Transformation Canvas -->
+            <Border Grid.Column="1" BorderBrush="Black" BorderThickness="1" Margin="10">
+                <Canvas Name="TransformationCanvas" Background="White">
+                    <!-- Crosshair for origin -->
+                    <Line StartPoint="0,250" EndPoint="500,250" Stroke="LightGray" StrokeThickness="1" />
+                    <Line StartPoint="250,0" EndPoint="250,500" Stroke="LightGray" StrokeThickness="1" />
+                </Canvas>
+            </Border>
+        </Grid>
+    </Grid>
+</Window>
