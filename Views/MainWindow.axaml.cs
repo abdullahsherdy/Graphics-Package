@@ -23,7 +23,7 @@ namespace GraphicsAlgorithmsApp.Views
         private List<Point> _currentPoints = new List<Point>();
         private int _canvasCenterX = 250;
         private int _canvasCenterY = 250;
-        private double _unitScale = 50.0;
+        private double _unitScale = 100.0;
         private List<Point> _transformedState = new List<Point>();
 
         public MainWindow()
@@ -32,9 +32,32 @@ namespace GraphicsAlgorithmsApp.Views
             _canvas = this.FindControl<Canvas>("DrawingCanvas");
             _transformationCanvas = this.FindControl<Canvas>("TransformationCanvas");
             
+            _canvas.Width = 700;
+            _canvas.Height = 700;
+            _transformationCanvas.Width = 700;
+            _transformationCanvas.Height = 700;
+            
+            _canvasCenterX = 350;
+            _canvasCenterY = 350;
+
+            _canvas.SizeChanged += (s, e) =>
+            {
+                _canvasCenterX = (int)(_canvas.Width / 2);
+                _canvasCenterY = (int)(_canvas.Height / 2);
+                DrawCoordinateAxes();
+            };
+            
+            _transformationCanvas.SizeChanged += (s, e) =>
+            {
+                DrawCoordinateAxes(_transformationCanvas);
+            };
+            
             DataContext = _viewModel = new MainWindowViewModel();
             _viewModel.ClearAction = ClearCanvas;
             _viewModel.ApplyTransformationAction = ApplyTransformation;
+
+            DrawCoordinateAxes();
+            DrawCoordinateAxes(_transformationCanvas);
         }
 
         private void InitializeComponent()
@@ -56,7 +79,10 @@ namespace GraphicsAlgorithmsApp.Views
             if (_viewModel.IsCircleDrawing)
             {
                 var endPoint = new Models.Point(_startPoint.X + 5, _startPoint.Y);
-                DrawShape(_startPoint, endPoint);
+                if (_viewModel.ShowPreview)
+                {
+                    DrawPreview(_startPoint, endPoint);
+                }
             }
         }
 
@@ -96,20 +122,20 @@ namespace GraphicsAlgorithmsApp.Views
             
             switch (_viewModel.SelectedAlgorithmIndex)
             {
-                case 0:
+                case 0: // DDA Line
                     var ddaAlgorithm = new DDALineAlgorithm();
                     previewPoints.AddRange(ddaAlgorithm.CalculatePoints(start, end));
                     break;
-                case 1:
+                case 1: // Bresenham Line
                     var bresenhamLineAlgorithm = new BresenhamLineAlgorithm();
                     previewPoints.AddRange(bresenhamLineAlgorithm.CalculatePoints(start, end));
                     break;
-                case 2:
+                case 2: // Circle
                     var circleAlgorithm = new BresenhamCircleAlgorithm();
                     int radius = CalculateDistance(start, end);
                     previewPoints.AddRange(circleAlgorithm.CalculatePoints(start, radius));
                     break;
-                case 3:
+                case 3: // Ellipse
                     var ellipseAlgorithm = new EllipseAlgorithm();
                     int radiusX = Math.Abs(end.X - start.X);
                     int radiusY = Math.Abs(end.Y - start.Y);
@@ -123,38 +149,37 @@ namespace GraphicsAlgorithmsApp.Views
             }
         }
 
-    private void DrawShape(Models.Point start, Models.Point end)
-    {
-        _currentPoints.Clear();
-        _transformedState.Clear();
-
-        switch (_viewModel.SelectedAlgorithmIndex)
+        private void DrawShape(Models.Point start, Models.Point end)
         {
-            case 0:
-                var ddaAlgorithm = new DDALineAlgorithm();
-                _currentPoints.AddRange(ddaAlgorithm.CalculatePoints(start, end));
-                break;
-            case 1:
-                var bresenhamLineAlgorithm = new BresenhamLineAlgorithm();
-                _currentPoints.AddRange(bresenhamLineAlgorithm.CalculatePoints(start, end));
-                break;
-            case 2:
-                var circleAlgorithm = new BresenhamCircleAlgorithm();
-                int radius = CalculateDistance(start, end);
-                _currentPoints.AddRange(circleAlgorithm.CalculatePoints(start, radius));
-                break;
-            case 3:
-                var ellipseAlgorithm = new EllipseAlgorithm();
-                int radiusX = Math.Abs(end.X - start.X);
-                int radiusY = Math.Abs(end.Y - start.Y);
-                _currentPoints.AddRange(ellipseAlgorithm.CalculatePoints(start, radiusX, radiusY));
-                break;
+            _currentPoints.Clear();
+            _transformedState.Clear();
+
+            switch (_viewModel.SelectedAlgorithmIndex)
+            {
+                case 0: // DDA Line
+                    var ddaAlgorithm = new DDALineAlgorithm();
+                    _currentPoints.AddRange(ddaAlgorithm.CalculatePoints(start, end));
+                    break;
+                case 1: // Bresenham Line
+                    var bresenhamLineAlgorithm = new BresenhamLineAlgorithm();
+                    _currentPoints.AddRange(bresenhamLineAlgorithm.CalculatePoints(start, end));
+                    break;
+                case 2: // Circle
+                    var circleAlgorithm = new BresenhamCircleAlgorithm();
+                    int radius = CalculateDistance(start, end);
+                    _currentPoints.AddRange(circleAlgorithm.CalculatePoints(start, radius));
+                    break;
+                case 3: // Ellipse
+                    var ellipseAlgorithm = new EllipseAlgorithm();
+                    int radiusX = Math.Abs(end.X - start.X);
+                    int radiusY = Math.Abs(end.Y - start.Y);
+                    _currentPoints.AddRange(ellipseAlgorithm.CalculatePoints(start, radiusX, radiusY));
+                    break;
             }
 
             foreach (var point in _currentPoints)
-            DrawPixel(_canvas, point.X, point.Y, _viewModel.SelectedColor);
-    }  
-
+                DrawPixel(_canvas, point.X, point.Y, _viewModel.SelectedColor);
+        }  
 
         private void ClearPreview()
         {
@@ -175,12 +200,12 @@ namespace GraphicsAlgorithmsApp.Views
 
         private void DrawPixel(Canvas targetCanvas, int x, int y, Color color, bool isPreview = false)
         {
-
             if (x < 0 || x >= targetCanvas.Width || y < 0 || y >= targetCanvas.Height) return;
+            
             var ellipse = new Avalonia.Controls.Shapes.Ellipse
             {
-                Width = 2,
-                Height = 2,
+                Width = 3,
+                Height = 3,
                 Fill = new SolidColorBrush(color)
             };
             
@@ -189,8 +214,8 @@ namespace GraphicsAlgorithmsApp.Views
                 ellipse.Tag = "Preview";
             }
             
-            Canvas.SetLeft(ellipse, x - 1);
-            Canvas.SetTop(ellipse, y - 1);
+            Canvas.SetLeft(ellipse, x - 1.5);
+            Canvas.SetTop(ellipse, y - 1.5);
             targetCanvas.Children.Add(ellipse);
         }
 
@@ -199,11 +224,13 @@ namespace GraphicsAlgorithmsApp.Views
             if (_currentPoints.Count == 0) return;
 
             _transformationCanvas.Children.Clear();
+            DrawCoordinateAxes(_transformationCanvas);
+            
             List<Point> sourcePoints = _transformedState.Count > 0 
                 ? new List<Point>(_transformedState) 
                 : new List<Point>(_currentPoints);
 
-        List<Point> transformedPoints = new List<Point>();
+            List<Point> transformedPoints = new List<Point>();
             Point referencePoint = CalculateCentroid(sourcePoints);
 
             switch (_viewModel.SelectedTransformationIndex)
@@ -269,8 +296,34 @@ namespace GraphicsAlgorithmsApp.Views
 
         private void ClearCanvas()
         {
-            _canvas.Children.Clear();
-            _transformationCanvas.Children.Clear();
+            List<Control> toRemove = new List<Control>();
+            foreach (var child in _canvas.Children)
+            {
+                if (child is Control control && control.Tag?.ToString() != "CoordinateAxis")
+                {
+                    toRemove.Add(control);
+                }
+            }
+
+            foreach (var control in toRemove)
+            {
+                _canvas.Children.Remove(control);
+            }
+            
+            toRemove.Clear();
+            foreach (var child in _transformationCanvas.Children)
+            {
+                if (child is Control control && control.Tag?.ToString() != "CoordinateAxis")
+                {
+                    toRemove.Add(control);
+                }
+            }
+
+            foreach (var control in toRemove)
+            {
+                _transformationCanvas.Children.Remove(control);
+            }
+            
             _currentPoints.Clear();
             _transformedState.Clear();
         }
@@ -281,14 +334,68 @@ namespace GraphicsAlgorithmsApp.Views
             {
                 Text = $"({unitX:F2}, {unitY:F2})",
                 Foreground = Brushes.Black,
-                FontSize = 12,
+                FontSize = 10,
                 Background = Brushes.White,
                 Tag = "CoordLabel"
             };
 
-            Canvas.SetLeft(textBlock, x + 5); // Slightly offset
+            Canvas.SetLeft(textBlock, x + 5);
             Canvas.SetTop(textBlock, y + 5);
             targetCanvas.Children.Add(textBlock);
+        }
+
+        private void DrawCoordinateAxes(Canvas targetCanvas = null)
+        {
+            if (targetCanvas == null) targetCanvas = _canvas;
+            
+            List<Control> toRemove = new List<Control>();
+            foreach (var child in targetCanvas.Children)
+            {
+                if (child is Control control && control.Tag?.ToString() == "CoordinateAxis")
+                {
+                    toRemove.Add(control);
+                }
+            }
+
+            foreach (var control in toRemove)
+            {
+                targetCanvas.Children.Remove(control);
+            }
+
+            int centerX = (int)(targetCanvas.Width / 2);
+            int centerY = (int)(targetCanvas.Height / 2);
+            
+            var xAxis = new Avalonia.Controls.Shapes.Line
+            {
+                StartPoint = new Avalonia.Point(0, centerY),
+                EndPoint = new Avalonia.Point(targetCanvas.Width, centerY),
+                Stroke = Brushes.Black,
+                StrokeThickness = 1,
+                Tag = "CoordinateAxis"
+            };
+            
+            var yAxis = new Avalonia.Controls.Shapes.Line
+            {
+                StartPoint = new Avalonia.Point(centerX, 0),
+                EndPoint = new Avalonia.Point(centerX, targetCanvas.Height),
+                Stroke = Brushes.Black,
+                StrokeThickness = 1,
+                Tag = "CoordinateAxis"
+            };
+            
+            var origin = new Avalonia.Controls.Shapes.Ellipse
+            {
+                Width = 6,
+                Height = 6,
+                Fill = Brushes.Red,
+                Tag = "CoordinateAxis"
+            };
+            Canvas.SetLeft(origin, centerX - 3);
+            Canvas.SetTop(origin, centerY - 3);
+            
+            targetCanvas.Children.Add(xAxis);
+            targetCanvas.Children.Add(yAxis);
+            targetCanvas.Children.Add(origin);
         }
     }
 }
