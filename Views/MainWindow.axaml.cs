@@ -175,6 +175,8 @@ namespace GraphicsAlgorithmsApp.Views
 
         private void DrawPixel(Canvas targetCanvas, int x, int y, Color color, bool isPreview = false)
         {
+
+            if (x < 0 || x >= targetCanvas.Width || y < 0 || y >= targetCanvas.Height) return;
             var ellipse = new Avalonia.Controls.Shapes.Ellipse
             {
                 Width = 2,
@@ -220,15 +222,15 @@ namespace GraphicsAlgorithmsApp.Views
                     break;
                 case 3: // Reflection X-Axis
                     foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.ReflectX(point, 0));
+                        transformedPoints.Add(Transform2D.ReflectX(point, _canvasCenterY));
                     break;
                 case 4: // Reflection Y-Axis
                     foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.ReflectY(point, 0));
+                        transformedPoints.Add(Transform2D.ReflectY(point, _canvasCenterX));
                     break;
                 case 5: // Reflection Origin
                     foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.ReflectAboutOrigin(point));
+                        transformedPoints.Add(Transform2D.ReflectAboutOrigin(point, _canvasCenterX, _canvasCenterY));
                     break;
                 case 6: // Shear X
                     foreach (var point in sourcePoints)

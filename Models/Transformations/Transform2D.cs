@@ -37,14 +37,14 @@ namespace GraphicsAlgorithmsApp.Models.Transformations
             return new Point(newX, newY);
         }
         
-        public static Point ReflectX(Point p, int yAxis = 0)
+        public static Point ReflectX(Point p, int canvasCenterY = 0)
         {
-            return new Point(p.X, 2 * yAxis - p.Y);
+            return new Point(p.X, 2 * canvasCenterY - p.Y);
         }
 
-        public static Point ReflectY(Point p, int xAxis = 0)
+        public static Point ReflectY(Point p, int canvasCenterX = 0)
         {
-            return new Point(2 * xAxis - p.X, p.Y);
+            return new Point(2 * canvasCenterX - p.X, p.Y);
         }
         
         public static Point ReflectAboutYEqualsX(Point p)
@@ -52,9 +52,9 @@ namespace GraphicsAlgorithmsApp.Models.Transformations
             return new Point(p.Y, p.X);
         }
         
-        public static Point ReflectAboutOrigin(Point p)
+        public static Point ReflectAboutOrigin(Point p, int canvasCenterX = 0, int canvasCenterY = 0)
         {
-            return new Point(-p.X, -p.Y);
+            return new Point(2 * canvasCenterX - p.X, 2 * canvasCenterY - p.Y);
         }
         
         public static Point ShearX(Point p, double shx)
