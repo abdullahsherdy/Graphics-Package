@@ -5,21 +5,21 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
 {
     public class EllipseAlgorithm : IGenericDrawingAlgorithm
     {
-        public List<Point> CalculatePoints(Point center, int radiusX, int radiusY)
+        public List<Point> CalculatePoints(Point center, double radiusX, double radiusY)
         {
             List<Point> points = new List<Point>();
             
-            int rx2 = radiusX * radiusX;
-            int ry2 = radiusY * radiusY;
-            int twoRx2 = 2 * rx2;
-            int twoRy2 = 2 * ry2;
-            int p;
-            int x = 0;
-            int y = radiusY;
-            int px = 0;
-            int py = twoRx2 * y;
+            double rx2 = radiusX * radiusX;
+            double ry2 = radiusY * radiusY;
+            double twoRx2 = 2 * rx2;
+            double twoRy2 = 2 * ry2;
+            double p;
+            double x = 0;
+            double y = radiusY;
+            double px = 0;
+            double py = twoRx2 * y;
             
-            p = (int)(ry2 - (rx2 * radiusY) + (0.25 * rx2));
+            p = (ry2 - (rx2 * radiusY) + (0.25 * rx2));
             
             AddEllipsePoints(points, center.X, center.Y, x, y);
             
@@ -40,7 +40,7 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
                 AddEllipsePoints(points, center.X, center.Y, x, y);
             }
             
-            p = (int)(ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
+            p = (ry2 * (x + 0.5) * (x + 0.5) + rx2 * (y - 1) * (y - 1) - rx2 * ry2);
             
             while (y > 0)
             {
@@ -62,7 +62,7 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
             return points;
         }
         
-        private void AddEllipsePoints(List<Point> points, int centerX, int centerY, int x, int y)
+        private void AddEllipsePoints(List<Point> points, double centerX, double centerY, double x, double y)
         {
             points.Add(new Point(centerX + x, centerY + y));
             points.Add(new Point(centerX - x, centerY + y));
@@ -72,8 +72,8 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
         
         public IEnumerable<Point> Execute(Point start, Point end)
         {
-            int radiusX = Math.Abs(end.X - start.X);
-            int radiusY = Math.Abs(end.Y - start.Y);
+            double radiusX = Math.Abs(end.X - start.X);
+            double radiusY = Math.Abs(end.Y - start.Y);
             return CalculatePoints(start, radiusX, radiusY);
         }
     }

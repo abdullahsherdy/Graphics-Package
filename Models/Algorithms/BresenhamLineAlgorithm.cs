@@ -8,50 +8,41 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
         public List<Point> CalculatePoints(Point start, Point end)
         {
             List<Point> points = new List<Point>();
-            
-            int x1 = start.X;
-            int y1 = start.Y;
-            int x2 = end.X;
-            int y2 = end.Y;
-            
+
+            int x1 = (int)Math.Round(start.X);
+            int y1 = (int)Math.Round(start.Y);
+            int x2 = (int)Math.Round(end.X);
+            int y2 = (int)Math.Round(end.Y);
+
             int dx = Math.Abs(x2 - x1);
-            int dy = -Math.Abs(y2 - y1);
-            
+            int dy = Math.Abs(y2 - y1);
             int sx = x1 < x2 ? 1 : -1;
             int sy = y1 < y2 ? 1 : -1;
-            
-            int error = dx + dy;
-            int e2;
-            
+
+            int err = dx - dy;
+
             while (true)
             {
                 points.Add(new Point(x1, y1));
-                
                 if (x1 == x2 && y1 == y2)
                     break;
-                
-                e2 = 2 * error;
-                
-                if (e2 >= dy)
+
+                int e2 = 2 * err;
+                if (e2 > -dy)
                 {
-                    if (x1 == x2)
-                        break;
-                    error += dy;
+                    err -= dy;
                     x1 += sx;
                 }
-                
-                if (e2 <= dx)
+                if (e2 < dx)
                 {
-                    if (y1 == y2)
-                        break;
-                    error += dx;
+                    err += dx;
                     y1 += sy;
                 }
             }
-            
+
             return points;
         }
-        
+
         public IEnumerable<Point> Execute(Point start, Point end)
         {
             return CalculatePoints(start, end);

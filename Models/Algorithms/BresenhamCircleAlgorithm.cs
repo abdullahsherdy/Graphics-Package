@@ -5,13 +5,13 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
 {
     public class BresenhamCircleAlgorithm : ICircleAlgorithm, IGenericDrawingAlgorithm
     {
-        public List<Point> CalculatePoints(Point center, int radius)
+        public List<Point> CalculatePoints(Point center, double radius)
         {
             List<Point> points = new List<Point>();
             
-            int x = 0;
-            int y = radius;
-            int d = 3 - 2 * radius;
+            double x = 0;
+            double y = radius;
+            double d = 3 - 2 * radius;
             
             DrawCirclePoints(points, center.X, center.Y, x, y);
             
@@ -35,7 +35,7 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
             return points;
         }
         
-        private void DrawCirclePoints(List<Point> points, int centerX, int centerY, int x, int y)
+        private void DrawCirclePoints(List<Point> points, double centerX, double centerY, double x, double y)
         {
             points.Add(new Point(centerX + x, centerY + y));
             points.Add(new Point(centerX - x, centerY + y));
@@ -49,7 +49,7 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
         
         public IEnumerable<Point> Execute(Point start, Point end)
         {
-            int radius = (int)Math.Sqrt(Math.Pow(end.X - start.X, 2) + Math.Pow(end.Y - start.Y, 2));
+            double radius = Math.Sqrt(Math.Pow(end.X - start.X, 2) + Math.Pow(end.Y - start.Y, 2));
             return CalculatePoints(start, radius);
         }
     }

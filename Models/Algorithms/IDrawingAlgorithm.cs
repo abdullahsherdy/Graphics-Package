@@ -13,7 +13,7 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
 
     public interface ICircleAlgorithm : IDrawingAlgorithm
     {
-        List<Point> CalculatePoints(Point center, int radius);
+        List<Point> CalculatePoints(Point center, double radius);
     }
 
         public interface IGenericDrawingAlgorithm : IDrawingAlgorithm

@@ -16,7 +16,7 @@ namespace GraphicsAlgorithmsApp.ViewModels
             TransformedPoints = new List<Point>();
         }
         
-        public void ApplyTranslation(int tx, int ty)
+        public void ApplyTranslation(double tx, double ty)
         {
             TransformedPoints.Clear();
             foreach (var point in OriginalPoints)
@@ -43,7 +43,7 @@ namespace GraphicsAlgorithmsApp.ViewModels
             }
         }
         
-        public void ApplyReflectionX(int yAxis = 0)
+        public void ApplyReflectionX(double yAxis = 0)
         {
             TransformedPoints.Clear();
             foreach (var point in OriginalPoints)
@@ -52,7 +52,7 @@ namespace GraphicsAlgorithmsApp.ViewModels
             }
         }
         
-        public void ApplyReflectionY(int xAxis = 0)
+        public void ApplyReflectionY(double xAxis = 0)
         {
             TransformedPoints.Clear();
             foreach (var point in OriginalPoints)

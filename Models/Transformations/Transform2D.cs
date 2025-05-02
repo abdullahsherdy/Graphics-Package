@@ -5,17 +5,17 @@ namespace GraphicsAlgorithmsApp.Models.Transformations
 {
     public class Transform2D
     {
-    public static Point Translate(Point p, double tx, double ty)
-    {
-        return new Point(p.X + (int)tx, p.Y + (int)ty);
-    }
+        public static Point Translate(Point p, double tx, double ty)
+        {
+            return new Point(p.X + tx, p.Y + ty);
+        }
         
         public static Point Scale(Point p, double sx, double sy, Point refPoint = null)
         {
             refPoint ??= new Point(0, 0);
             
-            int newX = (int)(refPoint.X + (p.X - refPoint.X) * sx);
-            int newY = (int)(refPoint.Y + (p.Y - refPoint.Y) * sy);
+            double newX = refPoint.X + (p.X - refPoint.X) * sx;
+            double newY = refPoint.Y + (p.Y - refPoint.Y) * sy;
             
             return new Point(newX, newY);
         }
@@ -28,21 +28,21 @@ namespace GraphicsAlgorithmsApp.Models.Transformations
             double cosTheta = Math.Cos(radians);
             double sinTheta = Math.Sin(radians);
             
-            int x = p.X - refPoint.X;
-            int y = p.Y - refPoint.Y;
+            double x = p.X - refPoint.X;
+            double y = p.Y - refPoint.Y;
             
-            int newX = (int)(x * cosTheta - y * sinTheta + refPoint.X);
-            int newY = (int)(x * sinTheta + y * cosTheta + refPoint.Y);
+            double newX = x * cosTheta - y * sinTheta + refPoint.X;
+            double newY = x * sinTheta + y * cosTheta + refPoint.Y;
             
             return new Point(newX, newY);
         }
         
-        public static Point ReflectX(Point p, int canvasCenterY = 0)
+        public static Point ReflectX(Point p, double canvasCenterY = 0)
         {
             return new Point(p.X, 2 * canvasCenterY - p.Y);
         }
 
-        public static Point ReflectY(Point p, int canvasCenterX = 0)
+        public static Point ReflectY(Point p, double canvasCenterX = 0)
         {
             return new Point(2 * canvasCenterX - p.X, p.Y);
         }
@@ -52,19 +52,19 @@ namespace GraphicsAlgorithmsApp.Models.Transformations
             return new Point(p.Y, p.X);
         }
         
-        public static Point ReflectAboutOrigin(Point p, int canvasCenterX = 0, int canvasCenterY = 0)
+        public static Point ReflectAboutOrigin(Point p, double canvasCenterX = 0, double canvasCenterY = 0)
         {
             return new Point(2 * canvasCenterX - p.X, 2 * canvasCenterY - p.Y);
         }
         
         public static Point ShearX(Point p, double shx)
         {
-            return new Point((int)(p.X + shx * p.Y), p.Y);
+            return new Point(p.X + shx * p.Y, p.Y);
         }
 
         public static Point ShearY(Point p, double shy)
         {
-            return new Point(p.X, (int)(p.Y + shy * p.X));
+            return new Point(p.X, p.Y + shy * p.X);
         }
     }
 }

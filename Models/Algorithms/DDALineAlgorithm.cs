@@ -9,16 +9,16 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
         {
             List<Point> points = new List<Point>();
             
-            int dx = end.X - start.X;
-            int dy = end.Y - start.Y;
+            double dx = end.X - start.X;
+            double dy = end.Y - start.Y;
             
-            int steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
+            double steps = Math.Max(Math.Abs(dx), Math.Abs(dy));
             
-            float xIncrement = dx / (float)steps;
-            float yIncrement = dy / (float)steps;
+            double xIncrement = dx / (float)steps;
+            double yIncrement = dy / (float)steps;
             
-            float x = start.X;
-            float y = start.Y;
+            double x = start.X;
+            double y = start.Y;
             
             points.Add(new Point(start.X, start.Y));
             
@@ -26,7 +26,7 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
             {
                 x += xIncrement;
                 y += yIncrement;
-                points.Add(new Point((int)Math.Round(x), (int)Math.Round(y)));
+                points.Add(new Point(Math.Round(x), (int)Math.Round(y)));
             }
             
             return points;

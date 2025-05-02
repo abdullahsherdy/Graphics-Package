@@ -36,7 +36,7 @@ namespace GraphicsAlgorithmsApp.Models.Algorithms
             return points;
         }
         
-        private void AddCirclePoints(List<Point> points, int centerX, int centerY, int x, int y)
+        private void AddCirclePoints(List<Point> points, double centerX, double centerY, double x, double y)
         {
             points.Add(new Point(centerX + x, centerY + y));
             points.Add(new Point(centerX - x, centerY + y));
