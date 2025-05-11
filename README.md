@@ -2,6 +2,26 @@
 
 A comprehensive graphics package built with Avalonia UI that implements various computer graphics algorithms and provides a normalized coordinate system for graphics operations.
 
+## Table of Contents
+- [Features](#features)
+  - [Core Components](#core-components)
+  - [Implemented Algorithms](#implemented-algorithms)
+- [Algorithm Implementations](#algorithm-implementations)
+  - [Line Drawing Algorithms](#line-drawing-algorithms)
+  - [Circle Drawing Algorithms](#circle-drawing-algorithms)
+  - [Ellipse Algorithm](#ellipse-algorithm)
+  - [Common Features Across Algorithms](#common-features-across-algorithms)
+- [Technical Details](#technical-details)
+- [Usage](#usage)
+  - [Game Development Use Cases](#game-development-use-cases)
+  - [Basic Usage](#basic-usage)
+  - [Common Use Cases](#common-use-cases)
+- [Project Structure](#project-structure)
+- [Coordinate System](#coordinate-system)
+- [Development Features](#development-features)
+- [Getting Started](#getting-started)
+- [Dependencies](#dependencies)
+
 ## Features
 
 ### Core Components
@@ -225,6 +245,12 @@ The package implements a unit circle coordinate system that:
 - Handles scaling and centering of graphics elements
 - Supports efficient geometric calculations
 
+## Development Features
+
+- Platform detection for cross-platform support
+- Logging capabilities
+- Embedded resource handling
+- Clean architecture with separation of concerns
 ## Getting Started
 
 1. Clone the repository
@@ -238,9 +264,4 @@ The package implements a unit circle coordinate system that:
 - Avalonia.ReactiveUI (11.2.7)
 - Avalonia.Themes.Fluent (11.2.7)
 
-## Development Features
 
-- Platform detection for cross-platform support
-- Logging capabilities
-- Embedded resource handling
-- Clean architecture with separation of concerns
