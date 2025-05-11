@@ -9,74 +9,110 @@ namespace GraphicsAlgorithmsApp.ViewModels
     {
         public List<Point> OriginalPoints { get; set; }
         public List<Point> TransformedPoints { get; set; }
-        
-        public TransformationViewModel()
+        private List<Transform2D> _transformationChain;
+        private double _canvasHeight;
+        private double _unitScale;
+        private double _canvasCenterX;
+        private double _canvasCenterY;
+
+        public TransformationViewModel(double canvasHeight = 700, double unitScale = 100.0, double canvasCenterX = 350, double canvasCenterY = 350)
         {
             OriginalPoints = new List<Point>();
             TransformedPoints = new List<Point>();
+            _transformationChain = new List<Transform2D>();
+            _canvasHeight = canvasHeight;
+            _unitScale = unitScale;
+            _canvasCenterX = canvasCenterX;
+            _canvasCenterY = canvasCenterY;
         }
-        
-        public void ApplyTranslation(double tx, double ty)
+
+        public void SetCanvasParameters(double height, double unitScale, double centerX, double centerY)
         {
-            TransformedPoints.Clear();
-            foreach (var point in OriginalPoints)
-            {
-                TransformedPoints.Add(Transform2D.Translate(point, tx, ty));
-            }
+            _canvasHeight = height;
+            _unitScale = unitScale;
+            _canvasCenterX = centerX;
+            _canvasCenterY = centerY;
+            ApplyTransformations();
         }
-        
-        public void ApplyScaling(double sx, double sy, Point referencePoint = null)
+
+        public void ClearTransformations()
         {
-            TransformedPoints.Clear();
-            foreach (var point in OriginalPoints)
-            {
-                TransformedPoints.Add(Transform2D.Scale(point, sx, sy, referencePoint));
-            }
+            _transformationChain.Clear();
+            ApplyTransformations();
         }
-        
-        public void ApplyRotation(double angle, Point center = null)
+
+        public void AddTranslation(double tx, double ty)
         {
-            TransformedPoints.Clear();
-            foreach (var point in OriginalPoints)
-            {
-                TransformedPoints.Add(Transform2D.Rotate(point, angle, center));
-            }
+            _transformationChain.Add(Transform2D.Translation(tx, ty, _canvasHeight, _unitScale, _canvasCenterX, _canvasCenterY));
+            ApplyTransformations();
         }
-        
-        public void ApplyReflectionX(double yAxis = 0)
+
+        public void AddScaling(double sx, double sy, Point referencePoint = null)
         {
-            TransformedPoints.Clear();
-            foreach (var point in OriginalPoints)
-            {
-                TransformedPoints.Add(Transform2D.ReflectX(point, yAxis));
-            }
+            _transformationChain.Add(Transform2D.Scaling(sx, sy, referencePoint, _canvasHeight, _unitScale, _canvasCenterX, _canvasCenterY));
+            ApplyTransformations();
         }
-        
-        public void ApplyReflectionY(double xAxis = 0)
+
+        public void AddRotation(double angle, Point center = null)
         {
-            TransformedPoints.Clear();
-            foreach (var point in OriginalPoints)
-            {
-                TransformedPoints.Add(Transform2D.ReflectY(point, xAxis));
-            }
+            _transformationChain.Add(Transform2D.Rotation(angle, center, _canvasHeight, _unitScale, _canvasCenterX, _canvasCenterY));
+            ApplyTransformations();
         }
-        
-        public void ApplyShearingX(double shx)
+
+        public void AddReflectionX(double yAxis = 0)
         {
-            TransformedPoints.Clear();
-            foreach (var point in OriginalPoints)
-            {
-                TransformedPoints.Add(Transform2D.ShearX(point, shx));
-            }
+            _transformationChain.Add(Transform2D.ReflectionX(yAxis, _canvasHeight, _unitScale, _canvasCenterX, _canvasCenterY));
+            ApplyTransformations();
         }
-        
-        public void ApplyShearingY(double shy)
+
+        public void AddReflectionY(double xAxis = 0)
         {
-            TransformedPoints.Clear();
-            foreach (var point in OriginalPoints)
-            {
-                TransformedPoints.Add(Transform2D.ShearY(point, shy));
-            }
+            _transformationChain.Add(Transform2D.ReflectionY(xAxis, _canvasHeight, _unitScale, _canvasCenterX, _canvasCenterY));
+            ApplyTransformations();
+        }
+
+        public void AddReflectionAboutYEqualsX()
+        {
+            _transformationChain.Add(Transform2D.ReflectionAboutYEqualsX(_canvasHeight, _unitScale, _canvasCenterX, _canvasCenterY));
+            ApplyTransformations();
+        }
+
+        public void AddReflectionAboutOrigin()
+        {
+            _transformationChain.Add(Transform2D.ReflectionAboutOrigin(_canvasCenterX, _canvasCenterY, _canvasHeight, _unitScale));
+            ApplyTransformations();
+        }
+
+        public void AddShearingX(double shx)
+        {
+            _transformationChain.Add(Transform2D.ShearX(shx, _canvasHeight, _unitScale, _canvasCenterX, _canvasCenterY));
+            ApplyTransformations();
+        }
+
+        public void AddShearingY(double shy)
+        {
+            _transformationChain.Add(Transform2D.ShearY(shy, _canvasHeight, _unitScale, _canvasCenterX, _canvasCenterY));
+            ApplyTransformations();
+        }
+
+        private void ApplyTransformations()
+        {
+            if (OriginalPoints.Count == 0) return;
+
+            // Create a single transformation matrix from the chain
+            var combinedTransform = Transform2D.CreateTransformationChain(
+                _canvasHeight, _unitScale, _canvasCenterX, _canvasCenterY,
+                _transformationChain.ToArray());
+
+            // Apply the combined transformation to all points
+            TransformedPoints = combinedTransform.TransformPoints(OriginalPoints);
+        }
+
+        public void SetOriginalPoints(IEnumerable<Point> points)
+        {
+            OriginalPoints.Clear();
+            OriginalPoints.AddRange(points);
+            ApplyTransformations();
         }
     }
 }

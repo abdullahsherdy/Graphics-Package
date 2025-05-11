@@ -29,19 +29,31 @@ namespace GraphicsAlgorithmsApp.Views
         public MainWindow()
         {
             InitializeComponent();
-            
-            DataContext = _viewModel = new MainWindowViewModel();
-            
+            _viewModel = new MainWindowViewModel();
+            DataContext = _viewModel;
+
+            // Initialize TransformationViewModel with canvas parameters
+            _viewModel.TransformationViewModel = new TransformationViewModel(
+                canvasHeight: 700,
+                unitScale: 100.0,
+                canvasCenterX: 350,
+                canvasCenterY: 350
+            );
+
+            // Subscribe to canvas size changes
+            this.GetObservable(WidthProperty).Subscribe(_ => UpdateCanvasParameters());
+            this.GetObservable(HeightProperty).Subscribe(_ => UpdateCanvasParameters());
+
             _canvas = this.FindControl<Canvas>("DrawingCanvas");
             _transformationCanvas = this.FindControl<Canvas>("TransformationCanvas");
-            
+
             if (_canvas != null && _transformationCanvas != null)
             {
                 _canvas.Width = 700;
                 _canvas.Height = 700;
                 _transformationCanvas.Width = 700;
                 _transformationCanvas.Height = 700;
-                
+
                 _canvasCenterX = 350;
                 _canvasCenterY = 350;
 
@@ -51,12 +63,21 @@ namespace GraphicsAlgorithmsApp.Views
                     _canvasCenterY = (_canvas.Height / 2);
                     DrawCoordinateAxes();
                 };
-                
+
                 _transformationCanvas.SizeChanged += (s, e) =>
                 {
                     DrawCoordinateAxes(_transformationCanvas);
+                    if (_viewModel.TransformationViewModel != null)
+                    {
+                        _viewModel.TransformationViewModel.SetCanvasParameters(
+                            height: _transformationCanvas.Height,
+                            unitScale: 100.0,
+                            centerX: _transformationCanvas.Width / 2,
+                            centerY: _transformationCanvas.Height / 2
+                        );
+                    }
                 };
-                
+
                 _viewModel.ClearAction = ClearCanvas;
                 _viewModel.ApplyTransformationAction = ApplyTransformation;
 
@@ -78,16 +99,16 @@ namespace GraphicsAlgorithmsApp.Views
         private void Canvas_PointerPressed(object sender, PointerPressedEventArgs e)
         {
             if (_canvas == null) return;
-            
+
             var position = e.GetPosition(_canvas);
             _startPoint = new Models.Point(position.X, position.Y);
             _isDrawing = true;
-            
+
             var unitCoords = UnitCircleCoordinates.ScreenToUnitCircle(
                 _startPoint.X, _startPoint.Y, _canvasCenterX, _canvasCenterY, _unitScale);
             _viewModel.UnitX = Math.Round(unitCoords.Item1, 2);
             _viewModel.UnitY = Math.Round(unitCoords.Item2, 2);
-            
+
             if (_viewModel.IsCircleDrawing)
             {
                 var endPoint = new Models.Point(_startPoint.X + 5, _startPoint.Y);
@@ -101,15 +122,15 @@ namespace GraphicsAlgorithmsApp.Views
         private void Canvas_PointerMoved(object sender, PointerEventArgs e)
         {
             if (_canvas == null) return;
-            
+
             var position = e.GetPosition(_canvas);
             var currentPoint = new Models.Point(position.X, position.Y);
-            
+
             var unitCoords = UnitCircleCoordinates.ScreenToUnitCircle(
                 currentPoint.X, currentPoint.Y, _canvasCenterX, _canvasCenterY, _unitScale);
             _viewModel.UnitX = Math.Round(unitCoords.Item1, 2);
             _viewModel.UnitY = Math.Round(unitCoords.Item2, 2);
-            
+
             if (!_isDrawing) return;
 
             if (_viewModel.ShowPreview)
@@ -122,10 +143,10 @@ namespace GraphicsAlgorithmsApp.Views
         private void Canvas_PointerReleased(object sender, PointerReleasedEventArgs e)
         {
             if (_canvas == null || !_isDrawing) return;
-            
+
             var position = e.GetPosition(_canvas);
             var endPoint = new Models.Point(position.X, position.Y);
-            
+
             DrawShape(_startPoint, endPoint);
             _isDrawing = false;
         }
@@ -133,9 +154,9 @@ namespace GraphicsAlgorithmsApp.Views
         private void DrawPreview(Models.Point start, Models.Point end)
         {
             if (_canvas == null) return;
-            
+
             List<Point> previewPoints = new List<Point>();
-            
+
             switch (_viewModel.SelectedAlgorithmIndex)
             {
                 case 0: // DDA Line
@@ -158,7 +179,7 @@ namespace GraphicsAlgorithmsApp.Views
                     previewPoints.AddRange(ellipseAlgorithm.CalculatePoints(start, radiusX, radiusY));
                     break;
             }
-            
+
             foreach (var point in previewPoints)
             {
                 DrawPixel(_canvas, point.X, point.Y, Colors.Gray, true);
@@ -168,7 +189,7 @@ namespace GraphicsAlgorithmsApp.Views
         private void DrawShape(Models.Point start, Models.Point end)
         {
             if (_canvas == null) return;
-            
+
             _currentPoints.Clear();
             _transformedState.Clear();
 
@@ -197,12 +218,12 @@ namespace GraphicsAlgorithmsApp.Views
 
             foreach (var point in _currentPoints)
                 DrawPixel(_canvas, point.X, point.Y, _viewModel.SelectedColor);
-        }  
+        }
 
         private void ClearPreview()
         {
             if (_canvas == null) return;
-            
+
             List<Control> toRemove = new List<Control>();
             foreach (var child in _canvas.Children)
             {
@@ -222,19 +243,19 @@ namespace GraphicsAlgorithmsApp.Views
         {
             if (targetCanvas == null) return;
             if (x < 0 || x >= targetCanvas.Width || y < 0 || y >= targetCanvas.Height) return;
-            
+
             var ellipse = new Avalonia.Controls.Shapes.Ellipse
             {
                 Width = 3,
                 Height = 3,
                 Fill = new SolidColorBrush(color)
             };
-            
+
             if (isPreview)
             {
                 ellipse.Tag = "Preview";
             }
-            
+
             Canvas.SetLeft(ellipse, x - 1.5);
             Canvas.SetTop(ellipse, y - 1.5);
             targetCanvas.Children.Add(ellipse);
@@ -246,50 +267,45 @@ namespace GraphicsAlgorithmsApp.Views
 
             _transformationCanvas.Children.Clear();
             DrawCoordinateAxes(_transformationCanvas);
-            
-            List<Point> sourcePoints = _transformedState.Count > 0 
-                ? new List<Point>(_transformedState) 
+
+            List<Point> sourcePoints = _transformedState.Count > 0
+                ? new List<Point>(_transformedState)
                 : new List<Point>(_currentPoints);
 
-            List<Point> transformedPoints = new List<Point>();
             Point referencePoint = CalculateCentroid(sourcePoints);
+            Transform2D transform;
 
             switch (_viewModel.SelectedTransformationIndex)
             {
                 case 0: // Translation
-                    foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.Translate(point, _viewModel.TranslateX, _viewModel.TranslateY));
+                    transform = Transform2D.Translation(_viewModel.TranslateX, _viewModel.TranslateY, _transformationCanvas.Height);
                     break;
                 case 1: // Scaling
-                    foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.Scale(point, _viewModel.ScaleX, _viewModel.ScaleY, referencePoint));
+                    transform = Transform2D.Scaling(_viewModel.ScaleX, _viewModel.ScaleY, referencePoint, _transformationCanvas.Height);
                     break;
                 case 2: // Rotation
-                    foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.Rotate(point, _viewModel.RotationAngle, referencePoint));
+                    transform = Transform2D.Rotation(_viewModel.RotationAngle, referencePoint, _transformationCanvas.Height);
                     break;
                 case 3: // Reflection X-Axis
-                    foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.ReflectX(point, _canvasCenterY));
+                    transform = Transform2D.ReflectionX(_canvasCenterY, _transformationCanvas.Height);
                     break;
                 case 4: // Reflection Y-Axis
-                    foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.ReflectY(point, _canvasCenterX));
+                    transform = Transform2D.ReflectionY(_canvasCenterX, _transformationCanvas.Height);
                     break;
                 case 5: // Reflection Origin
-                    foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.ReflectAboutOrigin(point, _canvasCenterX, _canvasCenterY));
+                    transform = Transform2D.ReflectionAboutOrigin(_canvasCenterX, _canvasCenterY, _transformationCanvas.Height);
                     break;
                 case 6: // Shear X
-                    foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.ShearX(point, _viewModel.ShearFactor));
+                    transform = Transform2D.ShearX(_viewModel.ShearFactor, _transformationCanvas.Height);
                     break;
                 case 7: // Shear Y
-                    foreach (var point in sourcePoints)
-                        transformedPoints.Add(Transform2D.ShearY(point, _viewModel.ShearFactor));
+                    transform = Transform2D.ShearY(_viewModel.ShearFactor, _transformationCanvas.Height);
                     break;
+                default:
+                    return;
             }
 
+            var transformedPoints = transform.TransformPoints(sourcePoints);
             foreach (var point in transformedPoints)
                 DrawPixel(_transformationCanvas, point.X, point.Y, _viewModel.TransformedColor);
 
@@ -309,7 +325,7 @@ namespace GraphicsAlgorithmsApp.Views
 
             return new Point(sumX / points.Count, sumY / points.Count);
         }
-        
+
         private double CalculateDistance(Models.Point p1, Models.Point p2)
         {
             return Math.Sqrt(Math.Pow(p2.X - p1.X, 2) + Math.Pow(p2.Y - p1.Y, 2));
@@ -335,7 +351,7 @@ namespace GraphicsAlgorithmsApp.Views
                     _canvas.Children.Remove(control);
                 }
             }
-            
+
             if (_transformationCanvas != null)
             {
                 List<Control> toRemove = new List<Control>();
@@ -352,7 +368,7 @@ namespace GraphicsAlgorithmsApp.Views
                     _transformationCanvas.Children.Remove(control);
                 }
             }
-            
+
             _currentPoints.Clear();
             _transformedState.Clear();
         }
@@ -360,7 +376,7 @@ namespace GraphicsAlgorithmsApp.Views
         private void DrawCoordinateLabel(Canvas targetCanvas, int x, int y, double unitX, double unitY)
         {
             if (targetCanvas == null) return;
-            
+
             var textBlock = new TextBlock
             {
                 Text = $"({unitX:F2}, {unitY:F2})",
@@ -379,7 +395,7 @@ namespace GraphicsAlgorithmsApp.Views
         {
             if (targetCanvas == null) targetCanvas = _canvas;
             if (targetCanvas == null) return;
-            
+
             List<Control> toRemove = new List<Control>();
             foreach (var child in targetCanvas.Children)
             {
@@ -396,7 +412,7 @@ namespace GraphicsAlgorithmsApp.Views
 
             double centerX = (targetCanvas.Width / 2);
             double centerY = (targetCanvas.Height / 2);
-            
+
             var xAxis = new Avalonia.Controls.Shapes.Line
             {
                 StartPoint = new Avalonia.Point(0, centerY),
@@ -405,7 +421,7 @@ namespace GraphicsAlgorithmsApp.Views
                 StrokeThickness = 1,
                 Tag = "CoordinateAxis"
             };
-            
+
             var yAxis = new Avalonia.Controls.Shapes.Line
             {
                 StartPoint = new Avalonia.Point(centerX, 0),
@@ -414,7 +430,7 @@ namespace GraphicsAlgorithmsApp.Views
                 StrokeThickness = 1,
                 Tag = "CoordinateAxis"
             };
-            
+
             var origin = new Avalonia.Controls.Shapes.Ellipse
             {
                 Width = 6,
@@ -424,10 +440,53 @@ namespace GraphicsAlgorithmsApp.Views
             };
             Canvas.SetLeft(origin, centerX - 3);
             Canvas.SetTop(origin, centerY - 3);
-            
+
             targetCanvas.Children.Add(xAxis);
             targetCanvas.Children.Add(yAxis);
             targetCanvas.Children.Add(origin);
+        }
+
+        private void UpdateCanvasParameters()
+        {
+            if (DataContext is MainWindowViewModel viewModel && viewModel.TransformationViewModel != null)
+            {
+                var canvas = this.FindControl<Canvas>("MainCanvas");
+                if (canvas != null)
+                {
+                    viewModel.TransformationViewModel.SetCanvasParameters(
+                        height: canvas.Bounds.Height,
+                        unitScale: 100.0,
+                        centerX: canvas.Bounds.Width / 2,
+                        centerY: canvas.Bounds.Height / 2
+                    );
+                }
+            }
+        }
+
+        private void OnCanvasSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (DataContext is MainWindowViewModel viewModel && viewModel.TransformationViewModel != null)
+            {
+                viewModel.TransformationViewModel.SetCanvasParameters(
+                    height: e.NewSize.Height,
+                    unitScale: 100.0,
+                    centerX: e.NewSize.Width / 2,
+                    centerY: e.NewSize.Height / 2
+                );
+            }
+        }
+
+        private void OnTransformationCanvasSizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (_viewModel.TransformationViewModel != null)
+            {
+                _viewModel.TransformationViewModel.SetCanvasParameters(
+                    height: e.NewSize.Height,
+                    unitScale: 100.0,
+                    centerX: e.NewSize.Width / 2,
+                    centerY: e.NewSize.Height / 2
+                );
+            }
         }
     }
 }
